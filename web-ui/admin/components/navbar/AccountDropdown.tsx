@@ -1,0 +1,105 @@
+"use client";
+
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "../ui/button";
+import { User, LogOut, ShoppingBag, User2, Settings2 } from "lucide-react";
+import { useState } from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
+import { resetAuthCookies } from "@/lib/actions/auth.actions";
+
+export function AccountDropdown() {
+  const { user, loading, signOut } = useAuth();
+
+  const handleLogout = async () => {
+    await resetAuthCookies();
+  };
+
+  return (
+    <div>
+      {!loading && (
+        <>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" className="gap-2 hover:bg-accent">
+                  <User className="h-4 w-4" />
+                  <span className="font-medium hidden sm:inline">
+                    {user.first_name?.split(" ")[0] || "Account"}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {user.first_name || "User"}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {user.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/account"
+                    className="cursor-pointer flex items-center gap-2"
+                  >
+                    <User className="h-4 w-4" />
+                    Account
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/account/store"
+                    className="cursor-pointer flex items-center gap-2"
+                  >
+                    <User className="h-4 w-4" />
+                    My Store
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/account/settings"
+                    className="cursor-pointer flex items-center gap-2"
+                  >
+                    <Settings2 className="h-4 w-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600 flex items-center gap-2">
+                  <LogOut className="h-4 w-4" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link
+              href="/auth/sign-in"
+              className="flex items-center gap-2 border border-border p-2 rounded-full"
+            >
+              <User2 />
+            </Link>
+          )}
+        </>
+      )}
+      {loading && (
+        <div className="h-10 w-24 bg-accent/50 rounded-md animate-pulse" />
+      )}
+    </div>
+  );
+}
