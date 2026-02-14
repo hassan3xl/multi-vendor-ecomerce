@@ -15,7 +15,6 @@ import sys
 load_dotenv()
 
 
-
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
@@ -107,27 +106,52 @@ MIDDLEWARE = [
 ROOT_URLCONF = "config.urls"
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        # "rest_framework.authentication.TokenAuthentication",
-        # "rest_framework.authentication.SessionAuthentication",
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        # "rest_framework.authentication.TokenAuthentication",  # Basic static token auth
+        # "rest_framework.authentication.SessionAuthentication",  # Django admin & templates
+        "rest_framework_simplejwt.authentication.JWTAuthentication",  # SPA & mobile apps
+
     ],
+
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.AllowAny",
     ],
+    
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',  # For guests (not logged in)
+        'rest_framework.throttling.UserRateThrottle'   # For logged-in users
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '10/minute',  # Guests get 10 requests per min
+        'user': '1000/day',    # Users get 1000 requests per day
+        'sensitive_action': '5/minute', # <--- NEW SCOPE
+    }
 }
+
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(days=7),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=7),   
-    "ROTATE_REFRESH_TOKENS": True,                   
-    "BLACKLIST_AFTER_ROTATION": True,                
+    # 'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    'ROTATE_REFRESH_TOKENS': True, # Important: Issue new refresh token on use
+    'BLACKLIST_AFTER_ROTATION': True, # Important: Old refresh token becomes invalid
+    'AUTH_HEADER_TYPES': ('Bearer',),
     "UPDATE_LAST_LOGIN": True,                       
+
 }
 
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None  # keep this since you removed username field
-ACCOUNT_EMAIL_VERIFICATION = "none"       # keep this if you don’t want verification
-ACCOUNT_SIGNUP_FIELDS = ["email*", "password1*", "password2*"]
-ACCOUNT_LOGIN_METHODS = {"email"}
+STORAGES = {
+    # Media: Goes to Cloudinary
+    "default": {
+        "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+    },
+    
+    # Static: Stays local (or use WhiteNoise in production)
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+
 
 
 # Email backend for development
@@ -147,6 +171,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = "config.wsgi.application"
 
@@ -198,3 +223,17 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+
+ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_EMAIL_VERIFICATION = "none"
+ACCOUNT_LOGIN_METHODS = {"email"}
+ACCOUNT_UNIQUE_EMAIL = True
+
+ACCOUNT_SIGNUP_FIELDS = [
+    "email*",
+    "password1*",
+    "password2*",
+]
